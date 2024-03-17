@@ -3,6 +3,8 @@ import azure.functions as func
 import logging
 import requests
 from dotenv import load_dotenv
+import segno
+from io import BytesIO
 
 load_dotenv()
 
@@ -38,3 +40,25 @@ def image_bg_remover(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             "Failed to process the image", status_code=response.status_code
         )
+
+
+@app.route(route="generate_qr_code", methods=["POST"])
+def generate_qr_code(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        req_body = req.get_json()
+    except ValueError:
+        return func.HttpResponse("Invalid JSON", status_code=400)
+
+    url = req_body.get("url")
+    if not url:
+        return func.HttpResponse(
+            "Please provide a URL in the request body.", status_code=400
+        )
+
+    qr = segno.make(url)
+    buffer = BytesIO()
+    qr.save(buffer, kind="png", scale=10, border=1, dark="black", light="white")
+    buffer.seek(0)
+    img = buffer.getvalue()
+
+    return func.HttpResponse(img, mimetype="image/png")

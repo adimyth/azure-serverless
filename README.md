@@ -28,9 +28,9 @@ func init serverless-coursework --python
 ```
 
 ### Develop Image Background Remover function & test it locally
-1. Create a new function - Here, we are creating a new function with the name `image_bg_remover` using the `HTTP trigger` template and setting the `authlevel` to `anonymous`.
+1. Create a new function - Here, we are creating a new function with the name `image_bg_remover` using the `HTTP trigger` template
     ```bash
-    func new --name image_bg_remover --template "HTTP trigger" --authlevel "anonymous"
+    func new --name image_bg_remover --template "HTTP trigger"
     ```
 
     > We will use the same command to create new functions for the rest of the functions in the app. There are different kind of triggers available for creating new functions. For example, `Blob trigger`, `Queue trigger`, `Timer trigger`, etc. Refer [this article](https://www.educative.io/answers/what-are-function-triggers-in-azure)
@@ -106,3 +106,38 @@ func init serverless-coursework --python
 
     The `output.png` file will be saved in the current directory. Open the file to see the output of the function.
 
+
+## QR Code Generator
+1. Create a new function
+    ```bash
+    func new --name generate_qr_code --template "HTTP trigger"
+    ```
+2. Modify the `generate_qr_code` function in `function_app.py` to include the code for generating a QR code.
+3. Test the function using `curl` or any other HTTP client:
+    ```bash
+    curl --location 'http://localhost:7071/api/generate_qr_code' \
+            --header 'Content-Type: application/json' \
+            --data '{
+                "url": "https://www.leeds.ac.uk/"
+            }' --output qr.png
+    ```
+    Note: The `qr.png` file will be saved in the current directory. Open the file to see the output of the function.
+4. Deploy the function app to Azure:
+   ```bash
+    func azure functionapp publish "serverless-coursework-assignment"
+    ```
+5. Test the function in Azure:
+   1. Fetch the function key:
+        ```bash
+        az functionapp keys list --name "serverless-coursework-assignment" --resource-group "serverless-coursework" | jq -r '.functionKeys.default'
+        ```
+    2. Make a request to the function app using the function key:
+        ```bash
+        curl --location 'https://serverless-coursework-assignment.azurewebsites.net/api/generate_qr_code' \
+            --header 'Content-Type: application/json' \
+            --header 'x-functions-key: <function-key>' \
+            --data-raw '{
+                "url": "https://www.leeds.ac.uk/"
+            }' --output qr.png
+        ```
+        > 🚨 Replace `<function-key>` with the actual function key that you fetched in the previous step 🚨
